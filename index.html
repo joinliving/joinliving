@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小狗正在赶来</title>
+    <style>
+        /* 基础样式 */
+        :root { --theme-color: #ffffff; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: var(--theme-color);
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* 水印样式 */
+        .watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.3;
+            font-size: 24px;
+            color: #666;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* 实时时钟 */
+        #live-clock {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.1);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        /* 画廊布局 */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .gallery { grid-template-columns: 1fr; }
+        }
+
+        /* 动态更新区 */
+        .live-feed {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 联系信息 */
+        .contact {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 实时时钟 -->
+    <div id="live-clock"></div>
+
+    <!-- 联系信息 -->
+    <div class="contact">
+        <h3>📬 联系方式</h3>
+        <p>邮箱：oloiyy@163.com</p>
+        <p>微信：404NOFOUND</p>
+    </div>
+
+    <!-- 内容容器 -->
+    <div id="content"></div>
+
+    <!-- 水印 -->
+    <div class="watermark">© 山雀大王</div>
+
+    <!-- 动态更新区 -->
+    <div class="live-feed">
+        <h3>📢 创作动态</h3>
+        <div id="updates"></div>
+        <textarea id="admin-input" placeholder="输入密码后更新..." disabled></textarea>
+        <button onclick="postUpdate()" disabled>发布</button>
+    </div>
+
+<script>
+// 配置区（请修改以下内容）================================
+const CONFIG = {
+    password: "114477", // 设置发布密码
+    watermark: "© 山雀大王", // 水印文字
+    contact: {
+        email: "oloiyy@163.com",
+        wechat: "404NOFOUND"
+    },
+    works: {
+        // 格式：年份: [作品列表]
+        2023: [
+            { type: "art", title: "成小玉&HP", img: "image1.jpg", desc: "作品描述" },
+            { type: "novel", title: "小说1", content: "第一章..." }
+        ],
+        2022: [
+            { type: "art", title: "旧作", img: "old.jpg", desc: "早期作品" }
+        ]
+    }
+};
+
+// 数据存储（无需修改）==================================
+let updates = JSON.parse(localStorage.getItem('updates') || '[]');
+let visitCount = localStorage.getItem('visitCount') || 0;
+
+// 初始化页面
+function init() {
+    // 访问统计
+    visitCount++;
+    localStorage.setItem('visitCount', visitCount);
+    
+    // 生成内容
+    let html = '<h1 style="text-align:center; margin:40px 0">创作档案馆</h1>';
+    for (let year in CONFIG.works) {
+        html += `<div class="year-section">
+                    <h2>🎨 ${year}年作品</h2>
+                    <div class="gallery">`;
+        CONFIG.works[year].forEach(work => {
+            html += work.type === 'art' ? `
+                <div class="artwork">
+                    <img src="${work.img}" style="width:100%; border:1px solid #ddd">
+                    <h3>${work.title}</h3>
+                    <p>${work.desc}</p>
+                </div>` : `
+                <div class="novel">
+                    <h3>📖 ${work.title}</h3>
+                    <p>${work.content}</p>
+                </div>`;
+        });
+        html += '</div></div>';
+    }
+    document.getElementById('content').innerHTML = html;
+
+    // 显示动态更新
+    updates.forEach(update => {
+        document.getElementById('updates').innerHTML += `
+            <div style="margin:10px 0; border-bottom:1px solid #eee">
+                <small>${new Date(update.time).toLocaleString()}</small>
+                <p>${update.text}</p>
+            </div>`;
+    });
+
+    // 实时时钟
+    setInterval(() => {
+        document.getElementById('live-clock').innerHTML = `
+            🕒 ${new Date().toLocaleDateString()} 
+            ${new Date().toLocaleTimeString()}<br>
+            👥 访问次数：${visitCount}
+        `;
+    }, 1000);
+}
+
+// 动态发布功能
+function postUpdate() {
+    const input = document.getElementById('admin-input');
+    const text = input.value.trim();
+    if (text) {
+        updates.push({
+            time: new Date().toISOString(),
+            text: text
+        });
+        localStorage.setItem('updates', JSON.stringify(updates));
+        input.value = '';
+        location.reload();
+    }
+}
+
+// 密码验证
+document.getElementById('admin-input').addEventListener('focus', () => {
+    const password = prompt('请输入管理密码：');
+    if (password === CONFIG.password) {
+        document.getElementById('admin-input').disabled = false;
+        document.querySelector('button').disabled = false;
+    }
+});
+
+// 启动页面
+init();
+</script>
+</body>
+</html>
