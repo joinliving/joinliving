@@ -1,0 +1,17 @@
+{
+  "2023": {
+    "arts": [
+      {
+        "title": "作品名称",
+        "image": "images/art1.jpg",
+        "desc": "作品描述"
+      }
+    ],
+    "novels": [
+      {
+        "title": "小说标题",
+        "content": "小说内容..."
+      }
+    ]
+  }
+}
